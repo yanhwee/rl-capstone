@@ -1,6 +1,5 @@
 import numpy as np
-from mixins import MemoryMixin
-from models import LinearModel
+from mixins import AgentMixin, MemoryMixin, LinearModelMixin, EligibilityTraceMixin
 
 class Agent:
     def start(self, state):
@@ -12,22 +11,20 @@ class Agent:
     def end(self):
         raise NotImplementedError
 
-class Sarsa(Agent, MemoryMixin):
+class Sarsa(Agent, AgentMixin, MemoryMixin, LinearModelMixin):
     def __init__(
         self, n_actions, n_features, discount_factor, 
         target_policy, n_step, learning_rate):
+        AgentMixin.__init__(self, discount_factor, target_policy, None)
         MemoryMixin.__init__(self, n_step)
-        self.model = LinearModel(n_actions, n_features, learning_rate)
-        self.discount_factor = discount_factor
-        self.target_policy = target_policy
+        LinearModelMixin.__init__(self, n_actions, n_features, learning_rate)
         self.max_discount_factor = self.discount_factor ** n_step
         self.returns = 0
         self.bootstrap = 0
     def start(self, state):
         MemoryMixin.start(self, state)
     def act(self, state):
-        q_values = self.model.q_values(state)
-        return self.target_policy.choose(q_values)
+        return AgentMixin.act(self, state)
     def observe(self, action, next_state, reward):
         MemoryMixin.observe(self, action, next_state, reward)
     def learn(self):
@@ -36,12 +33,12 @@ class Sarsa(Agent, MemoryMixin):
             self.returns -= self.bootstrap
             self.returns += self.rewards[-1] * self.max_discount_factor
             self.returns /= self.discount_factor
-            self.bootstrap = self.model.q_value(self.states[-1], self.actions[-1])
+            self.bootstrap = self.q_value(self.states[-1], self.actions[-1])
             self.bootstrap *= self.max_discount_factor
             self.returns += self.bootstrap
-            value = self.model.q_value(self.states[0], self.actions[0])
-            td_error = self.returns - value
-            self.sgd_update(td_error)
+            state, action = self.states[0], self.actions[0]
+            td_error = self.returns - self.q_value(state, action)
+            self.sgd_update(state, action, td_error)
         else:
             self.returns += self.rewards[-1] * self.max_discount_factor
             self.returns /= self.discount_factor
@@ -55,24 +52,20 @@ class Sarsa(Agent, MemoryMixin):
             action = self.actions.popleft()
             self.returns -= reward
             self.returns /= self.discount_factor
-            value = self.q_value(state, action)
-            td_error = self.returns - value
-            self.sgd_update(td_error)
+            td_error = self.returns - self.q_value(state, action)
+            self.sgd_update(state, action, td_error)
 
-class ExpectedSarsa(Agent, MemoryMixin, LinearModelMixin):
+class ExpectedSarsa(Agent, AgentMixin, MemoryMixin, LinearModelMixin):
     def __init__(
         self, n_actions, n_features, discount_factor, 
         target_policy, behaviour_policy, n_step, learning_rate):
+        AgentMixin.__init__(self, discount_factor, target_policy, behaviour_policy)
         MemoryMixin.__init__(self, n_step)
         LinearModelMixin.__init__(self, n_actions, n_features, learning_rate)
-        self.discount_factor = discount_factor
-        self.target_policy = target_policy
-        self.behaviour_policy = behaviour_policy if behaviour_policy else target_policy
     def start(self, state):
         MemoryMixin.start(self, state)
     def act(self, state):
-        q_values = self.q_values(state)
-        return self.behaviour_policy.choose(q_values)
+        return AgentMixin.act(self, state)
     def observe(self, action, next_state, reward):
         MemoryMixin.observe(self, action, next_state, reward)
     def returns(self):
@@ -84,31 +77,25 @@ class ExpectedSarsa(Agent, MemoryMixin, LinearModelMixin):
         return returns
     def learn(self):
         if self.ready():
-            value = self.q_value(self.states[0], self.actions[0])
-            td_error = self.returns() - value
-            self.sgd_update(td_error)
+            state, action = self.states[0], self.actions[0]
+            td_error = self.returns() - self.q_value(state, action)
+            self.sgd_update(state, action, td_error)
     def end(self):
         self.actions.append(None)
         for _ in range(self.n_step):
-            value = self.q_value(self.states[0], self.actions[0])
-            td_error = self.returns() - value
-            self.sgd_update(td_error)
+            state, action = self.states[0], self.actions[0]
+            td_error = self.returns() - self.q_value(state, action)
+            self.sgd_update(state, action, td_error)
             self.rewards.popleft()
             self.states.popleft()
             self.actions.popleft()
 
-class EligibilityTraceMixin:
-    def __init__(self, n_actions, n_features):
-        self.traces = np.zeros((n_actions, n_features))
-
-class OnlineSarsa(Agent, EligibilityTraceMixin, LinearModelMixin):
+class OnlineSarsa(Agent, AgentMixin, EligibilityTraceMixin):
     def __init__(
         self, n_actions, n_features, discount_factor, 
         target_policy, trace_update, trace_decay, learning_rate):
-        EligibilityTraceMixin.__init__(self, n_actions, n_features)
-        LinearModelMixin.__init__(self, n_actions, n_features, learning_rate)
-        self.discount_factor = discount_factor
-        self.target_policy = target_policy
+        AgentMixin.__init__(self, discount_factor, target_policy, None)
+        EligibilityTraceMixin.__init__(self, n_actions, n_features, trace_update, trace_decay)
 
 # class Sarsa(AgentNStep):
 #     def __init__(
@@ -173,7 +160,7 @@ class OnlineSarsa(Agent, EligibilityTraceMixin, LinearModelMixin):
 #         self.gamma = gamma
 #         self.max_gamma = gamma ** (n_step + 1)
 #         self.policy = policy
-#         self.model = model
+#         self = model
 #         self.rewards = deque(maxlen=n_step + 1)
 #         self.states = deque(maxlen=n_step + 1)
 #         self.actions = deque(maxlen=n_step + 1)
@@ -185,11 +172,11 @@ class OnlineSarsa(Agent, EligibilityTraceMixin, LinearModelMixin):
 #         pass
 #     def observe(self, action, next_state, reward):
 #         self.actions.append(action)
-#         self.returns += self.max_gamma * self.model.predict((*self.states[-1], *self.actions[-1]))
+#         self.returns += self.max_gamma * self.predict((*self.states[-1], *self.actions[-1]))
 #         if len(self.rewards) == self.rewards.maxlen:
 #             self.returns -= self.rewards[0]
 #             self.returns /= self.gamma
-#             self.model.learn()
+#             self.learn()
 #         self.rewards.append(reward)
 #         self.states.append(next_state)
 #     def end(self):

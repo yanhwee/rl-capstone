@@ -15,8 +15,10 @@ class Greedy(Policy):
         pass
     def choose(self, values):
         return np.argmax(values)
-    def weighted_sum(self, values):
-        return np.amax(values)
+    # def weighted_sum(self, values):
+    #     return np.amax(values)
+    def weighted_sum(self, a, b):
+        return b[np.argmax(a)]
 
 class EGreedy(Policy):
     def __init__(self, epsilon):
@@ -26,10 +28,14 @@ class EGreedy(Policy):
             np.random.randint(len(values))
             if np.random.random() < self.epsilon
             else np.argmax(values))
-    def weighted_sum(self, values):
+    # def weighted_sum(self, values):
+    #     return (
+    #         np.sum(values) * self.epsilon + 
+    #         np.amax(values) * (1 - self.epsilon))
+    def weighted_sum(self, a, b):
         return (
-            np.sum(values) * self.epsilon + 
-            np.amax(values) * (1 - self.epsilon))
+            np.sum(b) * self.epsilon +
+            b[np.argmax(a)] * (1 - self.epsilon))
 
 
 # class EGreedy(Policy):
