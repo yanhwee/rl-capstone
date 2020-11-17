@@ -2,15 +2,15 @@ import numpy as np
 
 class Policy:
     def choose(self, values):
-        pass
+        raise NotImplementedError
     def weighted_sum(self, a, b):
-        pass
+        raise NotImplementedError
     def probability(self, action, q_values):
-        pass
+        raise NotImplementedError
     # def probabilities(self, values):
-    #     pass
+    #     raise NotImplementedError
     # def weighted_sum(self, values):
-    #     pass
+    #     raise NotImplementedError
 
 class Greedy(Policy):
     def __init__(self):
