@@ -143,17 +143,6 @@ class TreeAgent(Agent):
             values = q_values.copy()
             values[action] = returns
             returns = reward + self.discount_factor * self.target_policy.weighted_sum(q_values, values)
-
-            probabilities = self.target_policy.probabilities(q_values)
-            q_values[action] = returns
-            np.dot(probabilities, q_values)
-
-            index = argmax(q_values)
-            q_values[action] = returns
-            return q_values[index]
-
-            q_values[action] = returns
-            returns = reward + self.discount_factor * self.target_policy.weighted_sum(q_values)
         return returns
     def td_error(self):
         state, action = self.states[0], self.actions[0]
@@ -227,8 +216,7 @@ class SarsaAccAgent(Agent):
         return self.returns() - self.q_value(state, action)
     def update_trace(self):
         self.traces *= self.discount_factor * self.trace_decay
-        if self.actions[-1] is not None:
-            self.traces[self.actions[-1]] += self.states[-1]
+        self.traces[self.actions[0]] += self.states[0]
     def update_weights(self):
         self.weights += self.learning_rate * self.td_error() * self.traces
     # Memory
@@ -257,11 +245,13 @@ class SarsaDutchAgent(Agent):
         # Eligibility Trace
         self.trace_decay = trace_decay
         self.traces = np.zeros((n_actions, n_features))
+        self.prev_weights = None
         # Model
         self.learning_rate = learning_rate
         self.weights = np.zeros((n_actions, n_features))
     def start(self, state):
         self.traces.fill(0)
+        self.prev_weights = self.weights.copy()
         self.rewards.clear()
         self.states.clear()
         self.actions.clear()
@@ -296,11 +286,20 @@ class SarsaDutchAgent(Agent):
         state, action = self.states[0], self.actions[0]
         return self.returns() - self.q_value(state, action)
     def update_trace(self):
+        state, q_traces = self.states[0], self.traces[self.actions[0]]
         self.traces *= self.discount_factor * self.trace_decay
-        if self.actions[-1] is not None:
-            self.traces[self.actions[-1]] = self.states[-1]
+        q_traces += (1 - self.learning_rate * np.dot(q_traces, state)) * state
     def update_weights(self):
-        self.weights += self.learning_rate * self.td_error() * self.traces
+        state = self.states[0]
+        new_weights = (
+            self.weights + 
+            self.learning_rate * (
+                (self.td_error() * self.traces) + (
+                    (self.traces - state) * (
+                        np.dot(self.weights, state) - 
+                        np.dot(self.prev_weights, state)))))
+        self.prev_weights = self.weights
+        self.weights = new_weights
     # Memory
     def ready(self):
         return len(self.rewards) >= self.max_length
@@ -362,16 +361,19 @@ class TreeAccAgent(Agent):
             else self.q_value(self.states[-1], self.actions[-1]))
         for reward, state, action in list(zip(self.rewards, self.states, self.actions))[:0:-1]:
             q_values = self.q_values(state)
-            q_values[action] = returns
-            returns = reward + self.discount_factor * self.target_policy.weighted_sum(q_values)
+            values = q_values.copy()
+            values[action] = returns
+            returns = reward + self.discount_factor * self.target_policy.weighted_sum(q_values, values)
         return returns
     def td_error(self):
         state, action = self.states[0], self.actions[0]
         return self.returns() - self.q_value(state, action)
     def update_trace(self):
-        self.traces *= self.discount_factor * self.trace_decay * self.target_policy
-        if self.actions[-1] is not None:
-            self.traces[self.actions[-1]] += self.states[-1]
+        state, action = self.states[0], self.actions[0]
+        self.traces *= (
+            self.discount_factor * self.trace_decay * 
+            self.target_policy.probability(action, self.q_values(state)))
+        self.traces[action] += state
     def update_weights(self):
         self.weights += self.learning_rate * self.td_error() * self.traces
     # Memory
@@ -401,11 +403,13 @@ class TreeDutchAgent(Agent):
         # Eligibility Trace
         self.trace_decay = trace_decay
         self.traces = np.zeros((n_actions, n_features))
+        self.prev_weights = None
         # Model
         self.learning_rate = learning_rate
         self.weights = np.zeros((n_actions, n_features))
     def start(self, state):
         self.traces.fill(0)
+        self.prev_weights = self.weights.copy()
         self.rewards.clear()
         self.states.clear()
         self.actions.clear()
@@ -413,7 +417,7 @@ class TreeDutchAgent(Agent):
         self.states.append(state)
     def act(self, state):
         q_values = self.q_values(state)
-        return self.target_policy.choose(q_values)
+        return self.behaviour_policy.choose(q_values)
     def observe(self, action, next_state, reward):
         self.actions.append(action)
         self.learn()
@@ -435,18 +439,31 @@ class TreeDutchAgent(Agent):
             else self.q_value(self.states[-1], self.actions[-1]))
         for reward, state, action in list(zip(self.rewards, self.states, self.actions))[:0:-1]:
             q_values = self.q_values(state)
-            q_values[action] = returns
-            returns = reward + self.discount_factor * self.target_policy.weighted_sum(q_values)
+            values = q_values.copy()
+            values[action] = returns
+            returns = reward + self.discount_factor * self.target_policy.weighted_sum(q_values, values)
         return returns
     def td_error(self):
         state, action = self.states[0], self.actions[0]
         return self.returns() - self.q_value(state, action)
     def update_trace(self):
-        self.traces *= self.discount_factor * self.trace_decay
-        if self.actions[-1] is not None:
-            self.traces[self.actions[-1]] = self.states[-1]
+        state, action = self.states[0], self.actions[0]
+        q_traces = self.traces[action]
+        self.traces *= (
+            self.discount_factor * self.trace_decay * 
+            self.target_policy.probability(action, self.q_values(state)))
+        q_traces += (1 - self.learning_rate * np.dot(q_traces, state)) * state
     def update_weights(self):
-        self.weights += self.learning_rate * self.td_error() * self.traces
+        state = self.states[0]
+        new_weights = (
+            self.weights + 
+            self.learning_rate * (
+                (self.td_error() * self.traces) + (
+                    (self.traces - state) * (
+                        np.dot(self.weights, state) - 
+                        np.dot(self.prev_weights, state)))))
+        self.prev_weights = self.weights
+        self.weights = new_weights
     # Memory
     def ready(self):
         return len(self.rewards) >= self.max_length
