@@ -2,6 +2,7 @@ import gym
 from gym import spaces
 import numpy as np
 from collections import deque
+from utils import compose
 import sys
 import time
 from tqdm.notebook import tqdm
@@ -16,8 +17,10 @@ class Interact:
         else:
             return lambda state: state
     @staticmethod
-    def test(env, agent, delay, limit=sys.maxsize):
-        preprocess = Interact.preprocessor(env)
+    def test(env, agent, delay=0, limit=sys.maxsize, preprocess=None):
+        preprocess = (
+            compose(Interact.preprocessor(env), preprocess)
+            if preprocess else Interact.preprocessor(env))
         def render(i):
             clear_output(wait=True)
             env.render()
@@ -36,8 +39,10 @@ class Interact:
             if done: break
         env.close()
     @staticmethod
-    def train(env, agent, eps):
-        preprocess = Interact.preprocessor(env)
+    def train(env, agent, eps, preprocess=None, eps_end=lambda i: None):
+        preprocess = (
+            compose(Interact.preprocessor(env), preprocess)
+            if preprocess else Interact.preprocessor(env))
         eps_act = [None] * eps
         eps_obs = [None] * eps
         eps_rewards = [None] * eps
@@ -73,6 +78,7 @@ class Interact:
                 if done: break
             ep_actions.append(-1)
             agent.end()
+            eps_end(i)
 
             eps_act[i] = ep_act
             eps_obs[i] = ep_obs

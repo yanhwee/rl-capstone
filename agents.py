@@ -19,6 +19,7 @@ class SarsaAgent(Agent):
         # Agent
         self.discount_factor = discount_factor
         self.target_policy = target_policy
+        self.behaviour_policy = target_policy
         self._max_discount_factor = discount_factor ** n_step
         self._returns = 0
         self._bootstrap = 0
@@ -39,7 +40,7 @@ class SarsaAgent(Agent):
         self.states.append(state)
     def act(self, state):
         q_values = self.q_values(state)
-        return self.target_policy.choose(q_values)
+        return self.behaviour_policy.choose(q_values)
     def observe(self, action, next_state, reward):
         self.actions.append(action)
         self.learn()
@@ -168,6 +169,7 @@ class SarsaAccAgent(Agent):
         # Agent
         self.discount_factor = discount_factor
         self.target_policy = target_policy
+        self.behaviour_policy = target_policy
         # Memory
         self.max_length = 2
         self.rewards = deque(maxlen=self.max_length)
@@ -188,7 +190,7 @@ class SarsaAccAgent(Agent):
         self.states.append(state)
     def act(self, state):
         q_values = self.q_values(state)
-        return self.target_policy.choose(q_values)
+        return self.behaviour_policy.choose(q_values)
     def observe(self, action, next_state, reward):
         self.actions.append(action)
         self.learn()
@@ -237,6 +239,7 @@ class SarsaDutchAgent(Agent):
         # Agent
         self.discount_factor = discount_factor
         self.target_policy = target_policy
+        self.behaviour_policy = target_policy
         # Memory
         self.max_length = 2
         self.rewards = deque(maxlen=self.max_length)
@@ -259,7 +262,7 @@ class SarsaDutchAgent(Agent):
         self.states.append(state)
     def act(self, state):
         q_values = self.q_values(state)
-        return self.target_policy.choose(q_values)
+        return self.behaviour_policy.choose(q_values)
     def observe(self, action, next_state, reward):
         self.actions.append(action)
         self.learn()
