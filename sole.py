@@ -69,6 +69,7 @@ class SOLE:
             time.sleep(delay)
         # Loop
         state = env.reset()
+        render(0)
         for i in range(limit if limit else sys.maxsize):
             state_action_0 = msa(state, 0)
             state_action_n = msa(state, n_actions)
@@ -86,6 +87,14 @@ class SOLE:
         print('Total Changes in Q Values', np.sum(Q_changes))
         print('Total Changes in Policy', np.sum(PI_changes))
         print('Total Time Taken for GPI', np.sum(np.add(PI_dt, Q_dt)))
+    def get_q_table(self):
+        n_states, n_actions, msa, Q = self.n_states, self.n_actions, self.msa, self.Q
+        q_table = np.zeros([n_states, n_actions])
+        for state in range(n_states):
+            for action in range(n_actions):
+                q_table[state, action] = Q[msa(state, action)]
+        return q_table
+        
 
     # def stats_PI_changes(self, title):
     #     simple_line(self.PI_changes, 1, 'Changes in Policy', 'Iterations', title)

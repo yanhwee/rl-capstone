@@ -4,7 +4,7 @@ N_TABS = 0
 text = \
 '''
 
-PI_changes, Q_changes, Q_dt
+n_states, n_actions, msa, Q
 '''
 if __name__ == "__main__":
     # text = input()

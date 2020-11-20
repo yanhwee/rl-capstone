@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from utils import simple_line, simple_bar
 
 class DP:
-    def __init__(self, env, gamma, limit=9999):
+    def __init__(self, env, gamma, limit=9999, policy_stop=True, q_value_stop=True):
         # Define State Action Space
         n_states = env.observation_space.n
         n_actions = env.action_space.n
@@ -32,7 +32,8 @@ class DP:
             Q_changes.append((old_q_table != new_q_table).sum())
             Q_dt.append(two - one)
             print(i, end=' ')
-            if np.array_equal(new_policy, old_policy): break
+            if policy_stop and np.array_equal(new_policy, old_policy): break
+            if q_value_stop and np.array_equal(new_q_table, old_q_table): break
         # Save
         self.env, self.q_table, self.PI_changes, self.Q_changes, self.Q_dt = env, q_table, PI_changes, Q_changes, Q_dt
     def test(self, delay, limit=None):
@@ -43,6 +44,7 @@ class DP:
             print(i)
             time.sleep(delay)
         state = env.reset()
+        render(0)
         for i in range(limit if limit else sys.maxsize):
             action = np.argmax(q_table[state])
             state, reward, done, info = env.step(action)
