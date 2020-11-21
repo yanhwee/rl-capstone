@@ -3,8 +3,18 @@ N_NEWLINES = 0
 N_TABS = 0
 text = \
 '''
-
-n_states, n_actions, msa, Q
+env, gamma, epsilon_start, epsilon_end, epsilon, epsilon_decay, alpha_start, alpha_end, alpha, alpha_decay, max_eps
+n_states
+n_actions
+max_timestep
+max_length
+q_table
+eps_acc_rewards
+eps_q_loss
+eps_pi_opt
+rewards
+states
+actions
 '''
 if __name__ == "__main__":
     # text = input()
