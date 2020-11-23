@@ -39,7 +39,7 @@ class Interact:
             if done: break
         env.close()
     @staticmethod
-    def train(env, agent, eps, preprocess=None, eps_end=lambda i: None):
+    def train(env, agent, eps, preprocess=None, eps_end=lambda i: None, tqdm_nested=False):
         preprocess = (
             compose(Interact.preprocessor(env), preprocess)
             if preprocess else Interact.preprocessor(env))
@@ -48,7 +48,7 @@ class Interact:
         eps_rewards = [None] * eps
         eps_states = [None] * eps
         eps_actions = [None] * eps
-        for i in tqdm(range(eps)):
+        for i in tqdm(range(eps), disable=tqdm_nested):
             ep_act = deque()
             ep_obs = deque()
             ep_rewards = deque()

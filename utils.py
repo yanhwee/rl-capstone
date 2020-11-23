@@ -16,6 +16,10 @@ def prod(iterable):
 def key_map(xs):
     return np.array(list(accumulate(xs, op.mul))) // xs[0]
 
+def key_mapper(xs):
+    key = key_map(xs)
+    return lambda x: np.dot(key, x)
+
 def compose(*fs):
     compose2 = lambda f, g: lambda *args, **kwargs: g(f(*args, **kwargs))
     return reduce(compose2, fs)
