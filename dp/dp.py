@@ -59,11 +59,11 @@ class DP:
         env.close()
     def stats(self, title=None):
         PI_changes, Q_changes, Q_dt, q_mae, pi_opt = self.PI_changes, self.Q_changes, self.Q_dt, self.q_mae, self.pi_opt
-        simple_bar(Q_changes, 1, 'Changes in Q Values', 'Sweeps', title)
-        simple_bar(PI_changes, 1, 'Changes in Policy', 'Sweeps', title)
-        simple_bar(Q_dt, 1, 'Time Taken for GPI', 'Sweeps', title)
-        if q_mae: simple_bar(q_mae, 1, 'Average State Action Loss', 'Sweeps', title)
-        if pi_opt: simple_bar(pi_opt, 1, '% Optimal Action', 'Sweeps', title)
+        simple_bar(Q_changes, 1, 'Changes in Q Values', 'Iterations', title)
+        simple_bar(PI_changes, 1, 'Changes in Policy', 'Iterations', title)
+        simple_bar(Q_dt, 1, 'Time Taken for GPI', 'Iterations', title)
+        if q_mae: simple_bar(q_mae, 1, 'Average State Action Loss', 'Iterations', title)
+        if pi_opt: simple_bar(pi_opt, 1, '% Optimal Action', 'Iterations', title)
         print('Total Changes in Q Values', np.sum(Q_changes))
         print('Total Changes in Policy', np.sum(PI_changes))
         print('Total Time Taken for GPI', np.sum(Q_dt))

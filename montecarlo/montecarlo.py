@@ -8,7 +8,7 @@ from utils import (
     simple_bar, simple_line, simple_scatter, 
     mae, argmax_equal_percent)
 
-class MC:
+class MonteCarlo:
     def __init__(self, env, gamma, epsilon_start, epsilon_end, alpha_start, alpha_end, max_eps, eval_q_table):
         # Define Constants
         n_states = env.observation_space.n

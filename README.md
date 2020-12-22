@@ -1,5 +1,7 @@
 # rl-capstone
-
+### Run
+1. `setup.bat`
+2. `jupyter lab`
 
 ### Troubleshooting
 1. TQDM Import Error
