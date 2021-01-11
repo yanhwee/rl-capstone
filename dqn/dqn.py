@@ -2,7 +2,7 @@ import sys
 import numpy as np
 from collections import deque
 from tqdm.auto import tqdm
-from utils import render_env, simple_scatter, simple_line, key_mapper, plot_2d_value_function, normaliser
+from utils import render_env, simple_scatter, simple_line, key_mapper, plot_2d_value_function, normaliser, test_env
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -68,15 +68,8 @@ class DQN:
         
     def test(self, delay=0, ts=sys.maxsize):
         env, model = self.env, self.model
-        render = lambda t: render_env(env, delay, t)
-        state = env.reset()
-        for t in range(ts):
-            render(t)
-            action = np.argmax(model.q_values(state))
-            state, _, done, _ = env.step(action)
-            if done: break
-        render(t)
-        env.close()
+        test_env(env, delay, ts, action_func=lambda state: \
+            np.argmax(model.q_values(state)))
 
     def plot_2d_value_function(self, intervals=10, labels=None, title=None, invert_v=False, anim=False):
         env, model = self.env, self.model

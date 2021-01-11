@@ -7,6 +7,7 @@ from matplotlib import cm
 from IPython.display import clear_output
 import time
 from gym import spaces
+import sys
 
 def comb(n, r):
     r = min(r, n-r)
@@ -119,3 +120,16 @@ def normaliser(lows, highs):
     scale = (highs - lows) / 2
     mean = (lows + highs) / 2
     return lambda x: (x - mean) / scale
+
+def test_env(env, delay=0, ts=sys.maxsize, action_func=None):
+    if action_func is None:
+        action_func = lambda state: env.action_space.sample()
+    state = env.reset()
+    render = lambda t: render_env(env, delay, t)
+    render('0')
+    for t in range(ts):
+        action = action_func(state)
+        state, reward, done, _ = env.step(action)
+        render(f'{t} {reward}')
+        if done: break
+    env.close()
