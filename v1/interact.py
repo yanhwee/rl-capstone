@@ -2,7 +2,7 @@ import gym
 from gym import spaces
 import numpy as np
 from collections import deque
-from utils import compose
+from v1.utils import compose
 import sys
 import time
 from tqdm.notebook import tqdm

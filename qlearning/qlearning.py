@@ -1,8 +1,8 @@
-from agents import *
-from interact import Interact
-from preprocess import *
-from policies import *
-from utils import (
+from v1.agents import *
+from v1.interact import Interact
+from v1.preprocess import *
+from v1.policies import *
+from v1.utils import (
     simple_bar, simple_line, simple_scatter, 
     mae, argmax_equal_percent)
 

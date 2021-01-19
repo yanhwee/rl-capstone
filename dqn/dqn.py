@@ -2,7 +2,7 @@ import sys
 import numpy as np
 from collections import deque
 from tqdm.auto import tqdm
-from utils import render_env, simple_scatter, simple_line, key_mapper, plot_2d_value_function, normaliser, test_env
+from v1.utils import render_env, simple_scatter, simple_line, key_mapper, plot_2d_value_function, normaliser, test_env
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

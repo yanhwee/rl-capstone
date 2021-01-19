@@ -3,7 +3,7 @@ import numpy as np
 from IPython.display import clear_output
 import time, sys
 import matplotlib.pyplot as plt
-from utils import simple_line, simple_bar, mae, argmax_equal_percent
+from v1.utils import simple_line, simple_bar, mae, argmax_equal_percent
 
 class DP:
     def __init__(self, env, gamma, limit=999, policy_stop=True, q_value_stop=True, eval_q_table=None):

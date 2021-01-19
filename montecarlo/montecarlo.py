@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from tqdm.notebook import tqdm
 from IPython.display import clear_output
 import time, sys
-from utils import (
+from v1.utils import (
     simple_bar, simple_line, simple_scatter, 
     mae, argmax_equal_percent)
 

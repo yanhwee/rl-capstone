@@ -1,4 +1,4 @@
-from utils import comb, prod, key_map
+from v1.utils import comb, prod, key_map
 from itertools import combinations_with_replacement, product, accumulate
 import operator as op
 import numpy as np
