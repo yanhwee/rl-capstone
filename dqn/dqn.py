@@ -122,14 +122,14 @@ class BaseModel:
     @staticmethod
     def q_values(model, state):
         with torch.no_grad():
-            x = torch.tensor(state, dtype=torch.float).cuda() # pylint: disable=not-callable
+            x = torch.tensor(state, dtype=torch.float) # pylint: disable=not-callable
             return model.forward(x).cpu().numpy()
     @staticmethod
     def update(model, opt, batch_size, states, actions, targets):
         # pylint: disable=not-callable
-        states = torch.tensor(states, dtype=torch.float).cuda()
-        actions = torch.tensor(actions, dtype=torch.long).cuda()
-        targets = torch.tensor(targets, dtype=torch.float).cuda()
+        states = torch.tensor(states, dtype=torch.float)
+        actions = torch.tensor(actions, dtype=torch.long)
+        targets = torch.tensor(targets, dtype=torch.float)
         ds = TensorDataset(states, actions, targets)
         dl = DataLoader(ds, batch_size=batch_size)
         acc_loss = 0
@@ -148,14 +148,14 @@ class SampleModel(Model, nn.Module):
     def __init__(self, lows, highs, n_actions, lr, batch_size):
         super().__init__()
         n_features = len(lows)
-        self.norm = normaliser(torch.tensor(lows).cuda(), torch.tensor(highs).cuda())
+        self.norm = normaliser(torch.tensor(lows), torch.tensor(highs))
         self.fc1 = nn.Linear(n_features, 16)
         # self.fc2 = nn.Linear(16, 16)
         # self.fc3 = nn.Linear(16, 16)
         self.fc4 = nn.Linear(16, n_actions)
         self.opt = optim.Adam(self.parameters(), lr=lr)
         self.batch_size = batch_size
-        self.cuda()
+        self
     def forward(self, x):
         x = self.norm(x)
         x = F.relu(self.fc1(x))
