@@ -21,7 +21,7 @@ Experiment | Algorithm | Path
 --- | --- | ---
 Grid World 4 x 4 | Exact Prediction | `gridworld/ex_3_8.py`
 Grid World 5 x 5 | Value Iteration | `gridworld/ex_4_1.py`
-FrozenLake & Taxi-v3 | Exact vs Value Iteration | `sole_vs_dp/`
+FrozenLake & Taxi-v3 | Exact Prediction, Value Iteration | `sole_vs_dp/`
 Taxi-v3 | Exact Prediction | `sole/`
 Taxi-v3 | Value Iteration | `dp/`
 Taxi-v3 | Monte Carlo | `montecarlo/`
